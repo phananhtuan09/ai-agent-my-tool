@@ -1,0 +1,120 @@
+{% set filters = job_settings.filters %}
+{% set sources = job_settings.sources %}
+
+<div id="job-filter-panel">
+  <form
+    class="stack-form"
+    hx-post="/agents/job_finder/filters"
+    hx-target="#job-filter-panel"
+    hx-swap="outerHTML"
+  >
+    <div class="field-grid">
+      <label>
+        <span>Salary min (USD)</span>
+        <input type="number" min="0" name="salary_min" value="{{ filters.salary_min or '' }}" />
+      </label>
+      <label>
+        <span>Salary max (USD)</span>
+        <input type="number" min="0" name="salary_max" value="{{ filters.salary_max or '' }}" />
+      </label>
+    </div>
+
+    <label>
+      <span>Preferred locations</span>
+      <input
+        type="text"
+        name="locations"
+        value="{{ filters.locations|join(', ') }}"
+        placeholder="Ho Chi Minh City, Hanoi"
+      />
+    </label>
+
+    <label>
+      <span>Must-have frameworks</span>
+      <input
+        type="text"
+        name="must_have_frameworks"
+        value="{{ filters.must_have_frameworks|join(', ') }}"
+        placeholder="React, TypeScript"
+      />
+    </label>
+
+    <label>
+      <span>Nice-to-have frameworks</span>
+      <input
+        type="text"
+        name="nice_to_have_frameworks"
+        value="{{ filters.nice_to_have_frameworks|join(', ') }}"
+        placeholder="Next.js, FastAPI"
+      />
+    </label>
+
+    <label>
+      <span>Exclude keywords</span>
+      <input
+        type="text"
+        name="exclude_keywords"
+        value="{{ filters.exclude_keywords|join(', ') }}"
+        placeholder="intern, onsite-only"
+      />
+    </label>
+
+    <label>
+      <span>Daily cron</span>
+      <div class="cron-field-group">
+        <select class="cron-preset" data-cron-target="job-finder-cron">
+          <option value="">Select preset</option>
+          <option value="0 * * * *">Every hour</option>
+          <option value="0 8 * * *">Daily at 8:00</option>
+          <option value="0 8 * * 1-5">Weekdays at 8:00</option>
+          <option value="0 8,20 * * *">Twice daily</option>
+        </select>
+        <input id="job-finder-cron" type="text" name="cron" value="{{ job_settings.cron }}" />
+      </div>
+    </label>
+
+    <fieldset class="source-fieldset">
+      <legend>Enabled sources</legend>
+      {% for source_name, source in sources.items() %}
+        <label class="checkbox-row">
+          <input
+            type="checkbox"
+            name="{{ source_name }}_enabled"
+            {% if source.enabled %}checked{% endif %}
+          />
+          <span>{{ source.label }}</span>
+        </label>
+      {% endfor %}
+    </fieldset>
+
+    <div class="inline-actions">
+      <button type="submit" class="btn btn-secondary" data-loading-text="Saving filters...">Save filters</button>
+      <button
+        type="button"
+        class="btn btn-primary"
+        data-run-job
+        data-loading-text="Running..."
+        hx-post="/agents/job_finder/run"
+        hx-target="#job-run-feedback"
+        hx-swap="innerHTML"
+      >
+        Run crawl now
+      </button>
+    </div>
+  </form>
+
+  <div id="job-run-feedback"></div>
+
+  {% if filter_feedback %}
+    <div class="feedback feedback-{{ filter_feedback.message_type }}">
+      <strong>
+        {% if filter_feedback.message_type == "success" %}
+          Filters updated
+        {% else %}
+          Filter error
+        {% endif %}
+      </strong>
+      <p>{{ filter_feedback.message }}</p>
+    </div>
+  {% endif %}
+</div>

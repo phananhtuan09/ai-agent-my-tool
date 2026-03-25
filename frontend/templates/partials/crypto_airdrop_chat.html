@@ -1,0 +1,52 @@
+{% if chat_feedback %}
+  <div class="feedback feedback-{{ chat_feedback.message_type }}">
+    <strong>
+      {% if chat_feedback.message_type == "success" %}
+        Filter updated
+      {% else %}
+        Filter blocked
+      {% endif %}
+    </strong>
+    <p>{{ chat_feedback.message }}</p>
+  </div>
+{% endif %}
+
+<div class="panel-heading compact-heading">
+  <div>
+    <p class="eyebrow">Alert lane</p>
+    <h3>Radar transcript</h3>
+  </div>
+</div>
+
+<ul class="activity-feed schedule-chat-feed" id="crypto-airdrop-chat-list">
+  {% if airdrop_messages %}
+    {% for item in airdrop_messages %}
+      <li>
+        <span class="feed-tag">{{ item.role }}</span>
+        <p>{{ item.content }}</p>
+      </li>
+    {% endfor %}
+  {% else %}
+    <li>
+      <span class="feed-tag">assistant</span>
+      <p>Run a crawl, then ask for a filter like `show only Ethereum airdrops`.</p>
+    </li>
+  {% endif %}
+</ul>
+
+<form
+  class="stack-form schedule-chat-form"
+  hx-post="/agents/crypto_airdrop/chat"
+  hx-target="#crypto-airdrop-chat-panel"
+  hx-swap="innerHTML"
+>
+  <label>
+    <span>Chat filter</span>
+    <textarea name="message" rows="4" placeholder="Example: show only Ethereum airdrops"></textarea>
+  </label>
+  <button type="submit" class="btn btn-primary" data-loading-text="Applying...">Apply filter</button>
+</form>
+
+<div id="airdrop-results-panel" hx-swap-oob="innerHTML">
+  {% include "partials/airdrop_cards.html" %}
+</div>

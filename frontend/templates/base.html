@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ page_title }} | AI Agent Tool</title>
+    <meta
+      name="description"
+      content="Unified FastAPI and HTMX control room for personal AI automation agents."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}" />
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <script defer src="{{ url_for('static', path='app.js') }}"></script>
+  </head>
+  <body
+    data-agent-name="{% if current_agent %}{{ current_agent.slug }}{% endif %}"
+    data-stream-url="{% if current_agent %}/stream/{{ current_agent.slug }}{% endif %}"
+  >
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="/">
+          <span class="brand-kicker">Personal VPS</span>
+          <strong>AI Agent Tool</strong>
+        </a>
+
+        <nav class="nav-group">
+          <a class="nav-link {% if not current_agent %}is-active{% endif %}" href="/">
+            <span class="nav-icon">01</span>
+            <span>Overview</span>
+            <small>Registry dashboard</small>
+          </a>
+          {% for agent in agents %}
+            <a
+              class="nav-link {% if current_agent and current_agent.slug == agent.slug %}is-active{% endif %}"
+              href="/agents/{{ agent.slug }}"
+            >
+              <span class="nav-icon">{{ "%02d"|format(loop.index + 1) }}</span>
+              <span>{{ agent.title }}</span>
+              <small>{{ agent.summary }}</small>
+            </a>
+          {% endfor %}
+        </nav>
+      </aside>
+
+      <main class="main-stage">
+        <header class="topbar">
+          <div class="page-header">
+            <p class="eyebrow">{{ page_context | default("Unified control room") }}</p>
+            <h1>{{ page_title }}</h1>
+          </div>
+          <div class="topbar-actions">
+            {% if current_agent %}
+              <div class="connection-status" id="connection-status" data-state="connecting">
+                <span class="conn-dot"></span>
+                <span class="conn-label">Connecting...</span>
+              </div>
+            {% endif %}
+            <button type="button" class="btn btn-ghost" onclick="window.AppShell.requestNotifications()">
+              Enable notifications
+            </button>
+            {% if current_agent %}
+              <button
+                type="button"
+                class="btn btn-primary"
+                hx-get="/agents/{{ current_agent.slug }}/config"
+                hx-target="#modal-root"
+                hx-swap="innerHTML"
+              >
+                Configure model
+              </button>
+            {% endif %}
+          </div>
+        </header>
+
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+
+    <div id="modal-root"></div>
+  </body>
+</html>

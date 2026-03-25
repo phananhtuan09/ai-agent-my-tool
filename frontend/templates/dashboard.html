@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <section class="page-hero accent-blue">
+    <div>
+      <p class="eyebrow">Unified control room</p>
+      <h2>AI Agent Tool</h2>
+    </div>
+    <span class="hero-badge">Platform First</span>
+  </section>
+
+  <section class="dashboard-grid">
+    {% for agent in agents %}
+      {% set snapshot = agent.build_snapshot() %}
+      <article class="dashboard-card accent-{{ agent.accent }}">
+        <div class="card-header">
+          <div>
+            <p class="card-kicker">{{ snapshot.provider|upper }}</p>
+            <h3>{{ agent.title }}</h3>
+          </div>
+          <span class="status-pill {% if snapshot.is_configured %}is-ready{% else %}is-warn{% endif %}">
+            {{ snapshot.status }}
+          </span>
+        </div>
+        <p class="card-copy">{{ agent.summary }}</p>
+        <dl class="metric-list">
+          <div>
+            <dt>Model</dt>
+            <dd>{{ snapshot.model }}</dd>
+          </div>
+          <div>
+            <dt>API key</dt>
+            <dd>{{ snapshot.api_key_env_var }}</dd>
+          </div>
+          <div>
+            <dt>Storage</dt>
+            <dd>{{ snapshot.storage_path.split('/')[-1] }}</dd>
+          </div>
+        </dl>
+        <a class="btn btn-ghost card-link" href="/agents/{{ agent.slug }}">Open {{ agent.title }}</a>
+      </article>
+    {% endfor %}
+  </section>
+{% endblock %}

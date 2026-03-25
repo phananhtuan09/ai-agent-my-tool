@@ -1,0 +1,51 @@
+<div class="modal-backdrop" onclick="window.AppShell.closeModal(event)">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <p class="eyebrow">Model configuration</p>
+        <h3>{{ agent.title }}</h3>
+      </div>
+      <button type="button" class="btn btn-ghost" onclick="window.AppShell.closeModal()">Close</button>
+    </div>
+
+    <form
+      class="config-form"
+      hx-post="/agents/{{ agent.slug }}/config"
+      hx-target="#config-feedback"
+      hx-swap="innerHTML"
+    >
+      <label>
+        <span>Provider</span>
+        <select name="provider">
+          <option value="anthropic" {% if agent_config.provider == "anthropic" %}selected{% endif %}>
+            Anthropic
+          </option>
+          <option value="openai" {% if agent_config.provider == "openai" %}selected{% endif %}>
+            OpenAI
+          </option>
+        </select>
+      </label>
+
+      <label>
+        <span>Model</span>
+        <input type="text" name="model" value="{{ agent_config.model }}" required />
+      </label>
+
+      <label>
+        <span>API key environment variable</span>
+        <input
+          type="text"
+          name="api_key_env_var"
+          value="{{ agent_config.api_key_env_var }}"
+          required
+        />
+      </label>
+
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary" data-loading-text="Saving...">Save and hot-swap</button>
+      </div>
+    </form>
+
+    <div id="config-feedback"></div>
+  </div>
+</div>

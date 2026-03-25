@@ -1,0 +1,68 @@
+<div class="panel-heading compact-heading">
+  <div>
+    <p class="eyebrow">Runtime controls</p>
+    <h3>Schedule settings</h3>
+  </div>
+</div>
+
+{% if schedule_feedback %}
+  <div class="feedback feedback-{{ schedule_feedback.message_type }}">
+    <strong>
+      {% if schedule_feedback.message_type == "success" %}
+        Settings updated
+      {% else %}
+        Settings blocked
+      {% endif %}
+    </strong>
+    <p>{{ schedule_feedback.message }}</p>
+  </div>
+{% endif %}
+
+<form
+  class="stack-form schedule-settings-form"
+  hx-post="/agents/daily_scheduler/settings"
+  hx-target="#daily-schedule-controls"
+  hx-swap="innerHTML"
+>
+  <label>
+    <span>Reminder cron</span>
+    <div class="cron-field-group">
+      <select class="cron-preset" data-cron-target="daily-reminder-cron">
+        <option value="">Select preset</option>
+        <option value="0 * * * *">Every hour</option>
+        <option value="*/30 * * * *">Every 30 minutes</option>
+        <option value="0 9-18 * * 1-5">Office hours</option>
+      </select>
+      <input id="daily-reminder-cron" type="text" name="reminder_cron" value="{{ schedule_settings.reminder_cron }}" />
+    </div>
+    <small class="field-hint">When to send overdue reminders. Example: every hour during the workday.</small>
+  </label>
+  <label>
+    <span>Reset cron</span>
+    <div class="cron-field-group">
+      <select class="cron-preset" data-cron-target="daily-reset-cron">
+        <option value="">Select preset</option>
+        <option value="0 0 * * *">Midnight</option>
+        <option value="0 6 * * *">06:00 daily</option>
+      </select>
+      <input id="daily-reset-cron" type="text" name="reset_cron" value="{{ schedule_settings.reset_cron }}" />
+    </div>
+    <small class="field-hint">When to clear the schedule and start a fresh day.</small>
+  </label>
+  <label>
+    <span>Workday start</span>
+    <input type="time" name="workday_start" value="{{ schedule_settings.workday_start }}" />
+    <small class="field-hint">Earliest time the planner should begin allocating tasks.</small>
+  </label>
+  <div class="inline-fields">
+    <label>
+      <span>Break minutes</span>
+      <input type="number" min="0" name="focus_break_minutes" value="{{ schedule_settings.focus_break_minutes }}" />
+    </label>
+    <label>
+      <span>Default minutes</span>
+      <input type="number" min="15" name="default_task_minutes" value="{{ schedule_settings.default_task_minutes }}" />
+    </label>
+  </div>
+  <button type="submit" class="btn btn-primary" data-loading-text="Saving...">Save schedule settings</button>
+</form>

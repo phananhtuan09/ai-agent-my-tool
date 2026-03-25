@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% set snapshot = current_agent.build_snapshot() %}
+  <section class="page-hero accent-amber">
+    <div>
+      <p class="eyebrow">{{ hero_eyebrow }}</p>
+      <h2>{{ hero_title }}</h2>
+    </div>
+    <div class="hero-badge">
+      <span data-role="agent-provider">{{ current_agent.settings.provider|upper }}</span>
+      <strong data-role="agent-model">{{ current_agent.settings.model }}</strong>
+    </div>
+  </section>
+
+  <section class="page-layout is-compact-sidebar">
+    <button
+      type="button"
+      class="btn btn-secondary filter-toggle"
+      data-filter-toggle="#airdrop-sidebar"
+      aria-expanded="false"
+    >
+      Toggle controls
+    </button>
+
+    <aside class="panel filter-sidebar" id="airdrop-sidebar">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Source controls</p>
+          <h3>Radar configuration</h3>
+        </div>
+        <span class="status-pill {% if snapshot.is_configured %}is-ready{% else %}is-warn{% endif %}" id="agent-status-chip">{{ snapshot.status }}</span>
+      </div>
+      {% include "partials/crypto_airdrop_controls.html" %}
+      <div class="sidebar-divider"></div>
+      <div id="crypto-airdrop-chat-panel">
+        {% include "partials/crypto_airdrop_chat.html" %}
+      </div>
+    </aside>
+
+    <section class="panel page-main results-panel" id="airdrop-results-panel">
+      {% include "partials/airdrop_cards.html" %}
+    </section>
+  </section>
+{% endblock %}

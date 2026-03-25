@@ -1,0 +1,18 @@
+<div class="feedback feedback-{{ feedback.message_type }}" role="status" aria-live="polite">
+  <strong>
+    {% if feedback.message_type == "success" %}
+      Crawl finished
+    {% else %}
+      Crawl blocked
+    {% endif %}
+  </strong>
+  <p>{{ feedback.message }}</p>
+</div>
+
+<div id="airdrop-results-panel" hx-swap-oob="innerHTML">
+  {% include "partials/airdrop_cards.html" %}
+</div>
+
+<div id="crypto-airdrop-chat-panel" hx-swap-oob="innerHTML">
+  {% include "partials/crypto_airdrop_chat.html" %}
+</div>

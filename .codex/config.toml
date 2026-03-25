@@ -1,0 +1,63 @@
+[agents]
+max_threads = 6
+max_depth = 2
+
+[agents.requirement_ba]
+description = "Business analyst for requirement discovery. Produces only the BA requirement artifact."
+config_file = "agents/requirement-ba.toml"
+nickname_candidates = ["BA", "BizAnalyst"]
+
+[agents.requirement_sa]
+description = "Solution architect for requirement discovery. Assesses feasibility and implementation direction."
+config_file = "agents/requirement-sa.toml"
+nickname_candidates = ["SA", "Architect"]
+
+[agents.requirement_researcher]
+description = "Domain researcher for requirement discovery. Verifies terminology, standards, APIs, and external sources."
+config_file = "agents/requirement-researcher.toml"
+nickname_candidates = ["Research", "Domain"]
+
+[agents.requirement_uiux]
+description = "UI/UX analyst for requirement discovery. Defines screens, flows, and interaction states."
+config_file = "agents/requirement-uiux.toml"
+nickname_candidates = ["UIUX", "UX"]
+
+[agents.task_investigator]
+description = "Read-only task investigator for ambiguous development requests. Detects task type, scope, and blocking gaps."
+config_file = "agents/task-investigator.toml"
+nickname_candidates = ["Investigate", "Triage"]
+
+[agents.dev_plan_reviewer]
+description = "Implementation-readiness reviewer for feature plans. Returns pass, warn, or fail with concrete fixes."
+config_file = "agents/dev-plan-reviewer.toml"
+nickname_candidates = ["PlanReview", "Reviewer"]
+
+[agents.dev_verifier]
+description = "Post-implementation verifier for feature plans. Checks acceptance coverage and status sync safety."
+config_file = "agents/dev-verifier.toml"
+nickname_candidates = ["Verify", "Verifier"]
+
+[agents.test_web_analyst]
+description = "Normalizes spec, plan, Figma, and runtime inputs into a bounded web-test intent artifact."
+config_file = "agents/test-web-analyst.toml"
+nickname_candidates = ["WebAnalyst", "Intent"]
+
+[agents.test_web_ui_mapper]
+description = "Maps routes, UI states, and selector strategy for browser-based web testing."
+config_file = "agents/test-web-ui-mapper.toml"
+nickname_candidates = ["UIMap", "Selectors"]
+
+[agents.test_web_runtime_probe]
+description = "Assesses runtime reachability, auth, and browser-test prerequisites for web test orchestration."
+config_file = "agents/test-web-runtime-probe.toml"
+nickname_candidates = ["Probe", "Runtime"]
+
+[agents.test_web_verifier]
+description = "Classifies web test execution results as product bugs, selector drift, runtime blockers, or coverage gaps."
+config_file = "agents/test-web-verifier.toml"
+nickname_candidates = ["WebVerify", "Triage"]
+
+[agents.test_web_qc]
+description = "Reads application codebase and analyst artifact to produce formal test cases grounded in source code."
+config_file = "agents/test-web-qc.toml"
+nickname_candidates = ["QC", "TestCases"]

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% set snapshot = current_agent.build_snapshot() %}
+  <section class="page-hero accent-blue">
+    <div>
+      <p class="eyebrow">{{ hero_eyebrow }}</p>
+      <h2>{{ hero_title }}</h2>
+    </div>
+    <div class="hero-badge">
+      <span data-role="agent-provider">{{ current_agent.settings.provider|upper }}</span>
+      <strong data-role="agent-model">{{ current_agent.settings.model }}</strong>
+    </div>
+  </section>
+
+  <section class="panel chat-panel" id="daily-schedule-chat-panel">
+    {% include "partials/daily_schedule_chat.html" %}
+  </section>
+
+  <section class="page-layout is-main-right">
+    <section class="panel page-main">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Timeline lane</p>
+          <h3>Today's schedule</h3>
+        </div>
+        <span class="status-pill {% if snapshot.is_configured %}is-ready{% else %}is-warn{% endif %}" id="agent-status-chip">{{ snapshot.status }}</span>
+      </div>
+      <div id="daily-schedule-timeline">
+        {% include "partials/daily_schedule_timeline.html" %}
+      </div>
+    </section>
+
+    <aside class="panel side-panel">
+      <details class="collapsible-section settings-panel">
+        <summary class="collapsible-toggle">Schedule settings</summary>
+        <div class="collapsible-body">
+          <div id="daily-schedule-controls">
+            {% include "partials/daily_scheduler_controls.html" %}
+          </div>
+        </div>
+      </details>
+    </aside>
+  </section>
+{% endblock %}

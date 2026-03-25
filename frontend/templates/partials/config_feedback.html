@@ -1,0 +1,10 @@
+<div class="feedback feedback-{{ message_type }}" role="status" aria-live="polite">
+  <strong>
+    {% if message_type == "success" %}
+      Config updated
+    {% else %}
+      Config error
+    {% endif %}
+  </strong>
+  <p>{{ message }}</p>
+</div>

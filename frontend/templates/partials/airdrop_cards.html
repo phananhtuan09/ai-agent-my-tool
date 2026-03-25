@@ -1,0 +1,71 @@
+{% if airdrop_summary %}
+  <div class="summary-strip">
+    <div>
+      <span class="summary-label">Last trigger</span>
+      <strong>{{ airdrop_summary.trigger }}</strong>
+    </div>
+    <div>
+      <span class="summary-label">Crawled</span>
+      <strong>{{ airdrop_summary.crawled_count }}</strong>
+    </div>
+    <div>
+      <span class="summary-label">Ranked</span>
+      <strong>{{ airdrop_summary.matched_count }}</strong>
+    </div>
+  </div>
+{% endif %}
+
+{% if airdrop_warnings %}
+  <div class="warning-stack">
+    {% for warning in airdrop_warnings %}
+      <div class="warning-banner">{{ warning }}</div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+{% if airdrops %}
+  <div class="data-table-wrap">
+    <table class="data-table" id="airdrop-table">
+      <thead>
+        <tr>
+          <th data-sort="score">Score</th>
+          <th data-sort="name">Name</th>
+          <th data-sort="chain">Chain</th>
+          <th data-sort="deadline">Deadline</th>
+          <th>AI Reason</th>
+          <th data-sort="source">Source</th>
+          <th>Link</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for airdrop in airdrops %}
+          <tr tabindex="0" data-requirements="{{ airdrop.requirements_summary|default('', true)|e }}">
+            <td class="cell-score">{{ airdrop.ai_score or 0 }}</td>
+            <td class="cell-title">{{ airdrop.name }}</td>
+            <td>{{ airdrop.chain }}</td>
+            <td class="cell-nowrap cell-muted">{{ airdrop.deadline or "—" }}</td>
+            <td class="cell-reason">{{ airdrop.ai_reason }}</td>
+            <td>{{ airdrop.source|replace('_', ' ')|title }}</td>
+            <td class="cell-link">
+              <a href="{{ airdrop.source_url }}" target="_blank" rel="noreferrer">Open ↗</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <article class="empty-state">
+    <div class="empty-icon">🪂</div>
+    <p class="eyebrow">No opportunities yet</p>
+    <h3>No ranked airdrops are stored for the latest cycle.</h3>
+    <p>Run a crawl or adjust the source selection to populate the radar.</p>
+    <button
+      type="button"
+      class="btn btn-primary"
+      data-trigger-click="#crypto-airdrop-controls [data-run-airdrop]"
+    >
+      Run crawl
+    </button>
+  </article>
+{% endif %}

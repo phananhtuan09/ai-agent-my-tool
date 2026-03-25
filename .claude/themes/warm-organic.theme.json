@@ -1,0 +1,67 @@
+{
+  "name": "Warm Organic",
+  "personality": ["warm", "natural", "friendly"],
+  "colors": {
+    "primary": {
+      "50": "#fef7ee",
+      "100": "#fdedd3",
+      "200": "#fad7a5",
+      "300": "#f7bb6d",
+      "400": "#f39432",
+      "500": "#f0760c",
+      "600": "#e15c07",
+      "700": "#bb4309",
+      "800": "#95350f",
+      "900": "#792e0f"
+    },
+    "neutral": {
+      "50": "#faf8f5",
+      "100": "#f3f0ea",
+      "200": "#e8e2d9",
+      "300": "#d9d0c3",
+      "400": "#c4b8a6",
+      "500": "#a89a85",
+      "600": "#8a7b66",
+      "700": "#6d6153",
+      "800": "#4f4640",
+      "900": "#332e2a"
+    },
+    "semantic": {
+      "success": "#65a30d",
+      "warning": "#ca8a04",
+      "error": "#dc2626",
+      "info": "#0891b2"
+    }
+  },
+  "typography": {
+    "fontFamily": {
+      "heading": "Lora, Georgia, serif",
+      "body": "Nunito, system-ui, sans-serif"
+    },
+    "scale": {
+      "xs": "0.75rem",
+      "sm": "0.875rem",
+      "base": "1rem",
+      "lg": "1.125rem",
+      "xl": "1.25rem",
+      "2xl": "1.5rem",
+      "3xl": "1.875rem",
+      "4xl": "2.25rem"
+    }
+  },
+  "spacing": {
+    "base": 4,
+    "scale": [4, 8, 12, 16, 20, 24, 32, 40, 48, 64]
+  },
+  "borderRadius": {
+    "sm": "0.375rem",
+    "md": "0.5rem",
+    "lg": "0.75rem",
+    "xl": "1rem"
+  },
+  "shadows": {
+    "sm": "0 1px 2px 0 rgb(51 46 42 / 0.05)",
+    "md": "0 4px 6px -1px rgb(51 46 42 / 0.08)",
+    "lg": "0 10px 15px -3px rgb(51 46 42 / 0.1)"
+  }
+}

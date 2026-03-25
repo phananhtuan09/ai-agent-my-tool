@@ -1,0 +1,67 @@
+{% set sources = airdrop_settings.sources %}
+
+<div id="crypto-airdrop-controls">
+  <form
+    class="stack-form"
+    hx-post="/agents/crypto_airdrop/settings"
+    hx-target="#crypto-airdrop-controls"
+    hx-swap="outerHTML"
+  >
+    <label>
+      <span>Radar cron</span>
+      <div class="cron-field-group">
+        <select class="cron-preset" data-cron-target="airdrop-cron">
+          <option value="">Select preset</option>
+          <option value="0 */6 * * *">Every 6 hours</option>
+          <option value="0 */12 * * *">Every 12 hours</option>
+          <option value="0 8 * * *">Daily at 8:00</option>
+        </select>
+        <input id="airdrop-cron" type="text" name="cron" value="{{ airdrop_settings.cron }}" />
+      </div>
+    </label>
+
+    <fieldset class="source-fieldset">
+      <legend>Enabled sources</legend>
+      {% for source_name, source in sources.items() %}
+        <label class="checkbox-row">
+          <input
+            type="checkbox"
+            name="{{ source_name }}_enabled"
+            {% if source.enabled %}checked{% endif %}
+          />
+          <span>{{ source.label }}</span>
+        </label>
+      {% endfor %}
+    </fieldset>
+
+    <div class="inline-actions">
+      <button type="submit" class="btn btn-secondary" data-loading-text="Saving sources...">Save sources</button>
+      <button
+        type="button"
+        class="btn btn-primary"
+        data-run-airdrop
+        data-loading-text="Running..."
+        hx-post="/agents/crypto_airdrop/run"
+        hx-target="#crypto-airdrop-run-feedback"
+        hx-swap="innerHTML"
+      >
+        Run crawl now
+      </button>
+    </div>
+  </form>
+
+  <div id="crypto-airdrop-run-feedback"></div>
+
+  {% if airdrop_feedback %}
+    <div class="feedback feedback-{{ airdrop_feedback.message_type }}">
+      <strong>
+        {% if airdrop_feedback.message_type == "success" %}
+          Sources updated
+        {% else %}
+          Source error
+        {% endif %}
+      </strong>
+      <p>{{ airdrop_feedback.message }}</p>
+    </div>
+  {% endif %}
+</div>

@@ -1,0 +1,55 @@
+{% if chat_feedback %}
+  <div class="feedback feedback-{{ chat_feedback.message_type }}">
+    <strong>
+      {% if chat_feedback.message_type == "success" %}
+        Schedule updated
+      {% else %}
+        Message blocked
+      {% endif %}
+    </strong>
+    <p>{{ chat_feedback.message }}</p>
+  </div>
+{% endif %}
+
+<div class="panel-heading compact-heading">
+  <div>
+    <p class="eyebrow">Chat lane</p>
+    <h3>Planner transcript</h3>
+  </div>
+  {% if awaiting_overdue_resolution %}
+    <span class="status-pill warning-pill">Overdue decision needed</span>
+  {% endif %}
+</div>
+
+<ul class="activity-feed schedule-chat-feed" id="daily-schedule-chat-list">
+  {% if schedule_messages %}
+    {% for item in schedule_messages %}
+      <li>
+        <span class="feed-tag">{{ item.role }}</span>
+        <p>{{ item.content }}</p>
+      </li>
+    {% endfor %}
+  {% else %}
+    <li>
+      <span class="feed-tag">assistant</span>
+      <p>Send a morning task list to create today's timeline.</p>
+    </li>
+  {% endif %}
+</ul>
+
+<form
+  class="stack-form schedule-chat-form"
+  hx-post="/agents/daily_scheduler/chat"
+  hx-target="#daily-schedule-chat-panel"
+  hx-swap="innerHTML"
+>
+  <label>
+    <span>Chat message</span>
+    <textarea name="message" rows="4" placeholder="Example: Review PRs, Implement scheduler API 90m, Test reminder flow"></textarea>
+  </label>
+  <button type="submit" class="btn btn-primary" data-loading-text="Planning...">Send to planner</button>
+</form>
+
+<div id="daily-schedule-timeline" hx-swap-oob="innerHTML">
+  {% include "partials/daily_schedule_timeline.html" %}
+</div>

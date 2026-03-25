@@ -1,0 +1,59 @@
+{% if schedule_tasks %}
+  {% set counts = namespace(active=0) %}
+  {% for task in schedule_tasks %}
+    {% if task.status in ["pending", "in_progress"] %}
+      {% set counts.active = counts.active + 1 %}
+    {% endif %}
+  {% endfor %}
+  <div class="summary-strip">
+    <div>
+      <span class="summary-label">Scheduled</span>
+      <strong>{{ schedule_tasks|length }} tasks</strong>
+    </div>
+    <div>
+      <span class="summary-label">Active</span>
+      <strong>{{ counts.active }}</strong>
+    </div>
+  </div>
+
+  <div class="data-table-wrap">
+    <table class="data-table" id="schedule-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Task</th>
+          <th>Time</th>
+          <th>Duration</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for task in schedule_tasks %}
+          <tr tabindex="0">
+            <td class="cell-score cell-index">{{ "%02d"|format(loop.index) }}</td>
+            <td class="cell-title">{{ task.title }}</td>
+            <td class="cell-nowrap cell-muted">{{ task.time_range }}</td>
+            <td class="cell-muted">{{ task.estimated_minutes }} min</td>
+            <td>
+              <span class="task-status status-{{ task.status|replace("_", "-") }}">{{ task.status|replace("_", " ") }}</span>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <article class="empty-state">
+    <div class="empty-icon">📋</div>
+    <p class="eyebrow">No tasks yet</p>
+    <h3>Start the day from the chat panel.</h3>
+    <p>Paste a task list separated by commas, semicolons, or new lines and the planner will build a timeline.</p>
+    <button
+      type="button"
+      class="btn btn-primary"
+      data-focus-target="#daily-schedule-chat-panel textarea[name='message']"
+    >
+      Start planning
+    </button>
+  </article>
+{% endif %}

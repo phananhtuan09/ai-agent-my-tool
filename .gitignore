@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+
+# Local environment files
+.env
+.env.*
+!.env.example
+config/.env
+config/.env.*
+!config/.env.example
+
+# Test and tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Local databases and runtime state
+*.db
+*.sqlite
+*.sqlite3
+backend/agents/*/memory.db
+*.lock
+
+# Editor and OS files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local tool settings
+.claude/settings.local.json

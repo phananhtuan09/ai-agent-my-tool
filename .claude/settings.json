@@ -1,0 +1,51 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Edit",
+      "Write",
+      "Glob",
+      "Grep",
+      "WebFetch",
+      "WebSearch",
+      "mcp__*",
+      "Bash(*)"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(rm -r *)",
+      "Bash(sudo *)",
+      "Bash(su *)",
+      "Bash(passwd *)",
+      "Bash(useradd *)",
+      "Bash(userdel *)",
+      "Bash(usermod *)",
+      "Bash(crontab *)",
+      "Bash(dd *)",
+      "Bash(mkfs *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git pull *)",
+      "Bash(git merge *)",
+      "Bash(git rebase *)",
+      "Bash(git checkout *)",
+      "Bash(git switch *)",
+      "Bash(git reset *)",
+      "Bash(git restore *)",
+      "Bash(git clean *)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo REMINDER: Start EVERY response with: Skills: [list] or Skills: none"
+          }
+        ]
+      }
+    ]
+  }
+}
