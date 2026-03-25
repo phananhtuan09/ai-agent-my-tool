@@ -31,6 +31,7 @@ dist/
 
 # Local databases and runtime state
 *.db
+*.db-*
 *.sqlite
 *.sqlite3
 backend/agents/*/memory.db
