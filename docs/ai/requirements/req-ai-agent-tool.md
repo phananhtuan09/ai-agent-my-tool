@@ -24,6 +24,7 @@ Note: All content in this document is in English.
 - [Feature Plan: Job Finder Agent](../planning/feature-job-finder-agent.md)
 - [Feature Plan: Daily Schedule Agent](../planning/feature-daily-schedule-agent.md)
 - [Feature Plan: Crypto Airdrop Agent](../planning/feature-crypto-airdrop-agent.md)
+- [Feature Plan: Config Page And Job Finder Removal](../planning/feature-config-page-and-job-finder-removal.md)
 
 ---
 

@@ -10,6 +10,7 @@ def register(registry: AgentRegistry) -> None:
     registry.register(
         CryptoAirdropAgent(
             settings=registry.get_settings("crypto_airdrop"),
+            openai_settings=registry.get_openai_settings(),
             broker=registry.broker,
         )
     )

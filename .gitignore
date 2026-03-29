@@ -29,6 +29,12 @@ build/
 dist/
 *.egg-info/
 
+# Node and browser test artifacts
+node_modules/
+test-results/
+playwright-report/
+.playwright/
+
 # Local databases and runtime state
 *.db
 *.db-*
@@ -43,6 +49,11 @@ backend/agents/*/memory.db
 .vscode/
 *.swp
 *.swo
+
+# Local agent workflow metadata
+.agents/
+.claude/
+AGENTS.md
 
 # Local tool settings
 .claude/settings.local.json

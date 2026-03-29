@@ -1,0 +1,14 @@
+<label>
+  <span>Default model</span>
+  <select name="default_model" required>
+    {% for model in available_models %}
+      <option value="{{ model }}" {% if selected_model == model %}selected{% endif %}>
+        {{ model }}
+      </option>
+    {% endfor %}
+  </select>
+</label>
+
+{% if message %}
+  {% include "partials/config_feedback.html" %}
+{% endif %}

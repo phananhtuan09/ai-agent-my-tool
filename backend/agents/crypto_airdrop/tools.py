@@ -68,7 +68,7 @@ def rank_airdrops(
         if not llm_client.is_configured:
             airdrop.ai_reason = (
                 f"{airdrop.ai_reason} Deterministic fallback used because "
-                f"{llm_client.api_key_env_var} is not configured."
+                f"{llm_client.api_key_name} is not configured."
             )
         ranked.append(airdrop)
     return sorted(ranked, key=lambda item: (item.ai_score or 0, item.name), reverse=True)

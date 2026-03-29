@@ -2,6 +2,10 @@
   <strong>
     {% if message_type == "success" %}
       Config updated
+    {% elif message_type == "info" %}
+      Info
+    {% elif message_type == "warn" %}
+      Warning
     {% else %}
       Config error
     {% endif %}

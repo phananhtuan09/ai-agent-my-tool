@@ -36,6 +36,7 @@ async def get_crypto_airdrop_controls(request: Request) -> HTMLResponse:
         "current_agent": agent,
         "airdrop_settings": agent._get_runtime_settings(),
         "airdrop_feedback": None,
+        "include_results_oob": False,
     }
     return _get_templates(request).TemplateResponse(
         request,
@@ -85,8 +86,7 @@ async def save_crypto_airdrop_settings(
             }
         }
         settings = save_agent_settings("crypto_airdrop", payload)
-        updated_settings = settings.agents["crypto_airdrop"]
-        agent.reload_settings(updated_settings)
+        request.app.state.registry.replace_settings(settings)
         agent.register_jobs(request.app.state.scheduler)
         agent.publish("status", snapshot=agent.build_snapshot())
         airdrop_feedback = {
@@ -109,6 +109,7 @@ async def save_crypto_airdrop_settings(
         "current_agent": agent,
         "airdrop_settings": agent._get_runtime_settings(),
         "airdrop_feedback": airdrop_feedback,
+        "include_results_oob": False,
     }
     return templates.TemplateResponse(
         request,
@@ -150,6 +151,7 @@ async def run_crypto_airdrop(request: Request) -> HTMLResponse:
         "airdrops": agent.repository.list_latest_airdrops(),
         "airdrop_messages": agent.repository.list_messages(),
         "airdrop_warnings": summary.warnings if summary else [],
+        "include_results_oob": False,
     }
     return templates.TemplateResponse(
         request,
@@ -194,6 +196,7 @@ async def post_crypto_airdrop_chat(
         "airdrop_messages": agent.repository.list_messages(),
         "airdrop_summary": agent.last_run_summary,
         "airdrop_warnings": agent.last_run_summary.warnings if agent.last_run_summary else [],
+        "include_results_oob": True,
     }
     return templates.TemplateResponse(
         request,

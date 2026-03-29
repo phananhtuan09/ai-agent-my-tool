@@ -7,8 +7,6 @@ from fastapi.responses import HTMLResponse
 
 from backend.agents._registry import AgentRegistry
 from backend.exceptions import AgentError
-
-
 router = APIRouter()
 
 
@@ -26,6 +24,7 @@ def _base_context(request: Request) -> dict[str, object]:
         "request": request,
         "agents": registry.list_agents(),
         "current_agent": None,
+        "current_page": "dashboard",
     }
 
 
@@ -37,7 +36,8 @@ async def dashboard(request: Request) -> HTMLResponse:
     context.update(
         {
             "page_title": "AI Agent Tool",
-            "page_description": "A unified control room for three independent automation agents.",
+            "page_context": "Unified control room",
+            "page_description": "A unified control room for the remaining automation agents.",
         }
     )
     return _get_templates(request).TemplateResponse(request, "dashboard.html", context)
@@ -57,6 +57,7 @@ async def agent_page(request: Request, agent_name: str) -> HTMLResponse:
     context.update(
         {
             "page_title": agent.title,
+            "current_page": "agent",
             "current_agent": agent,
             **agent.build_page_context(),
         }

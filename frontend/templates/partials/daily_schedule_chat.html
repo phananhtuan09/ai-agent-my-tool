@@ -24,13 +24,13 @@
 <ul class="activity-feed schedule-chat-feed" id="daily-schedule-chat-list">
   {% if schedule_messages %}
     {% for item in schedule_messages %}
-      <li>
+      <li class="is-{{ item.role|lower|replace(' ', '-') }}">
         <span class="feed-tag">{{ item.role }}</span>
         <p>{{ item.content }}</p>
       </li>
     {% endfor %}
   {% else %}
-    <li>
+    <li class="is-assistant">
       <span class="feed-tag">assistant</span>
       <p>Send a morning task list to create today's timeline.</p>
     </li>
@@ -46,10 +46,13 @@
   <label>
     <span>Chat message</span>
     <textarea name="message" rows="4" placeholder="Example: Review PRs, Implement scheduler API 90m, Test reminder flow"></textarea>
+    <small class="field-hint">Drop one task per line or mix commas and durations in a single prompt.</small>
   </label>
   <button type="submit" class="btn btn-primary" data-loading-text="Planning...">Send to planner</button>
 </form>
 
-<div id="daily-schedule-timeline" hx-swap-oob="innerHTML">
-  {% include "partials/daily_schedule_timeline.html" %}
-</div>
+{% if include_timeline_oob %}
+  <div id="daily-schedule-timeline" hx-swap-oob="innerHTML">
+    {% include "partials/daily_schedule_timeline.html" %}
+  </div>
+{% endif %}

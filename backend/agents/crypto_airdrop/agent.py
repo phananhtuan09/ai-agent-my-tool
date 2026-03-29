@@ -14,13 +14,18 @@ from backend.agents.crypto_airdrop.repository import CryptoAirdropRepository
 from backend.agents.crypto_airdrop.tools import apply_chat_filter, run_airdrop_pipeline
 from backend.exceptions import ConfigError
 from backend.shared.events import EventBroker
-from backend.shared.settings import AgentSettings
+from backend.shared.settings import AgentSettings, OpenAISettings
 
 
 class CryptoAirdropAgent(BaseAgent):
     """Registry-backed crypto airdrop workflow with ranked results and chat filters."""
 
-    def __init__(self, settings: AgentSettings, broker: EventBroker) -> None:
+    def __init__(
+        self,
+        settings: AgentSettings,
+        openai_settings: OpenAISettings,
+        broker: EventBroker,
+    ) -> None:
         super().__init__(
             slug="crypto_airdrop",
             title="Crypto Airdrop",
@@ -29,6 +34,7 @@ class CryptoAirdropAgent(BaseAgent):
             accent="amber",
             storage_path=Path(__file__).resolve().parent / "memory.db",
             settings=settings,
+            openai_settings=openai_settings,
             broker=broker,
         )
         self.repository = CryptoAirdropRepository(self.storage_path)

@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}" />
@@ -23,26 +23,47 @@
     data-stream-url="{% if current_agent %}/stream/{{ current_agent.slug }}{% endif %}"
   >
     <div class="app-shell">
-      <aside class="sidebar">
-        <a class="brand" href="/">
-          <span class="brand-kicker">Personal VPS</span>
-          <strong>AI Agent Tool</strong>
-        </a>
+      <aside class="sidebar" id="app-sidebar">
+        <div class="sidebar-header">
+          <a class="brand" href="/">
+            <span class="brand-kicker">Personal VPS</span>
+            <strong>AI Agent Tool</strong>
+          </a>
+          <button
+            type="button"
+            class="btn btn-ghost sidebar-close"
+            data-sidebar-close
+            aria-label="Close navigation"
+          >
+            Close
+          </button>
+        </div>
 
         <nav class="nav-group">
-          <a class="nav-link {% if not current_agent %}is-active{% endif %}" href="/">
+          <a class="nav-link {% if current_page == 'dashboard' %}is-active{% endif %}" href="/">
             <span class="nav-icon">01</span>
-            <span>Overview</span>
-            <small>Registry dashboard</small>
+            <span class="nav-copy">
+              <span>Overview</span>
+              <small>Registry dashboard</small>
+            </span>
+          </a>
+          <a class="nav-link {% if current_page == 'config' %}is-active{% endif %}" href="/config">
+            <span class="nav-icon">02</span>
+            <span class="nav-copy">
+              <span>Config</span>
+              <small>OpenAI connection</small>
+            </span>
           </a>
           {% for agent in agents %}
             <a
               class="nav-link {% if current_agent and current_agent.slug == agent.slug %}is-active{% endif %}"
               href="/agents/{{ agent.slug }}"
             >
-              <span class="nav-icon">{{ "%02d"|format(loop.index + 1) }}</span>
-              <span>{{ agent.title }}</span>
-              <small>{{ agent.summary }}</small>
+              <span class="nav-icon">{{ "%02d"|format(loop.index + 2) }}</span>
+              <span class="nav-copy">
+                <span>{{ agent.title }}</span>
+                <small>{{ agent.summary }}</small>
+              </span>
             </a>
           {% endfor %}
         </nav>
@@ -50,9 +71,21 @@
 
       <main class="main-stage">
         <header class="topbar">
-          <div class="page-header">
-            <p class="eyebrow">{{ page_context | default("Unified control room") }}</p>
-            <h1>{{ page_title }}</h1>
+          <div class="topbar-primary">
+            <button
+              type="button"
+              class="btn btn-ghost nav-toggle"
+              data-sidebar-open
+              aria-controls="app-sidebar"
+              aria-expanded="false"
+              aria-label="Open navigation"
+            >
+              Menu
+            </button>
+            <div class="page-header">
+              <p class="eyebrow">{{ page_context | default("Unified control room") }}</p>
+              <h1>{{ page_title }}</h1>
+            </div>
           </div>
           <div class="topbar-actions">
             {% if current_agent %}
@@ -72,7 +105,7 @@
                 hx-target="#modal-root"
                 hx-swap="innerHTML"
               >
-                Configure model
+                Change model
               </button>
             {% endif %}
           </div>
@@ -82,6 +115,12 @@
       </main>
     </div>
 
+    <button
+      type="button"
+      class="shell-overlay"
+      data-sidebar-close
+      aria-label="Close navigation overlay"
+    ></button>
     <div id="modal-root"></div>
   </body>
 </html>

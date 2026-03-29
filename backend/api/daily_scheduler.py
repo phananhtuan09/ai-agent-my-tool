@@ -36,6 +36,7 @@ async def get_daily_scheduler_controls(request: Request) -> HTMLResponse:
         "current_agent": agent,
         "schedule_settings": agent._get_runtime_settings(),
         "schedule_feedback": None,
+        "include_timeline_oob": False,
     }
     return _get_templates(request).TemplateResponse(
         request,
@@ -69,8 +70,7 @@ async def save_daily_scheduler_settings(
             }
         }
         settings = save_agent_settings("daily_scheduler", payload)
-        updated_settings = settings.agents["daily_scheduler"]
-        agent.reload_settings(updated_settings)
+        request.app.state.registry.replace_settings(settings)
         agent.register_jobs(request.app.state.scheduler)
         agent.publish("status", snapshot=agent.build_snapshot())
         schedule_feedback = {
@@ -93,6 +93,7 @@ async def save_daily_scheduler_settings(
         "current_agent": agent,
         "schedule_settings": agent._get_runtime_settings(),
         "schedule_feedback": schedule_feedback,
+        "include_timeline_oob": False,
     }
     return templates.TemplateResponse(
         request,
@@ -131,6 +132,7 @@ async def post_daily_scheduler_chat(
         "chat_feedback": chat_feedback,
         "schedule_tasks": agent.repository.list_tasks(),
         "schedule_messages": agent.repository.list_messages(),
+        "include_timeline_oob": True,
         "awaiting_overdue_resolution": agent._get_pending_overdue_task(
             agent.repository.list_tasks()
         )

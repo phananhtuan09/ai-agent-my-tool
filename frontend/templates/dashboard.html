@@ -5,8 +5,14 @@
     <div>
       <p class="eyebrow">Unified control room</p>
       <h2>AI Agent Tool</h2>
+      <p class="hero-copy">
+        Configure shared runtime, launch agent workflows, and monitor the control room from one Midnight AI shell.
+      </p>
     </div>
-    <span class="hero-badge">Platform First</span>
+    <div class="hero-badge">
+      <strong>Midnight AI</strong>
+      <span>Shared runtime active</span>
+    </div>
   </section>
 
   <section class="dashboard-grid">
@@ -15,7 +21,7 @@
       <article class="dashboard-card accent-{{ agent.accent }}">
         <div class="card-header">
           <div>
-            <p class="card-kicker">{{ snapshot.provider|upper }}</p>
+            <p class="card-kicker">{{ "Global default" if snapshot.model_source == "default" else "Agent override" }}</p>
             <h3>{{ agent.title }}</h3>
           </div>
           <span class="status-pill {% if snapshot.is_configured %}is-ready{% else %}is-warn{% endif %}">
@@ -29,8 +35,12 @@
             <dd>{{ snapshot.model }}</dd>
           </div>
           <div>
+            <dt>Base URL</dt>
+            <dd>{{ snapshot.base_url }}</dd>
+          </div>
+          <div>
             <dt>API key</dt>
-            <dd>{{ snapshot.api_key_env_var }}</dd>
+            <dd>{{ "Configured" if snapshot.is_configured else "Missing" }}</dd>
           </div>
           <div>
             <dt>Storage</dt>

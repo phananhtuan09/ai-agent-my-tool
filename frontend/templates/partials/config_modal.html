@@ -15,34 +15,25 @@
       hx-swap="innerHTML"
     >
       <label>
-        <span>Provider</span>
-        <select name="provider">
-          <option value="anthropic" {% if agent_config.provider == "anthropic" %}selected{% endif %}>
-            Anthropic
+        <span>Model</span>
+        <select name="model">
+          <option value="">
+            Use global default ({{ openai_config.default_model }})
           </option>
-          <option value="openai" {% if agent_config.provider == "openai" %}selected{% endif %}>
-            OpenAI
-          </option>
+          {% for model in model_options %}
+            <option value="{{ model }}" {% if agent_config.model == model %}selected{% endif %}>
+              {{ model }}
+            </option>
+          {% endfor %}
         </select>
       </label>
 
-      <label>
-        <span>Model</span>
-        <input type="text" name="model" value="{{ agent_config.model }}" required />
-      </label>
-
-      <label>
-        <span>API key environment variable</span>
-        <input
-          type="text"
-          name="api_key_env_var"
-          value="{{ agent_config.api_key_env_var }}"
-          required
-        />
-      </label>
+      {% if message %}
+        {% include "partials/config_feedback.html" %}
+      {% endif %}
 
       <div class="modal-actions">
-        <button type="submit" class="btn btn-primary" data-loading-text="Saving...">Save and hot-swap</button>
+        <button type="submit" class="btn btn-primary" data-loading-text="Saving...">Save model</button>
       </div>
     </form>
 

@@ -6,10 +6,15 @@
     <div>
       <p class="eyebrow">{{ hero_eyebrow }}</p>
       <h2>{{ hero_title }}</h2>
+      <p class="hero-copy">
+        Turn a raw task dump into a paced workday timeline, then keep the transcript and schedule in sync live.
+      </p>
     </div>
     <div class="hero-badge">
-      <span data-role="agent-provider">{{ current_agent.settings.provider|upper }}</span>
-      <strong data-role="agent-model">{{ current_agent.settings.model }}</strong>
+      <strong data-role="agent-model">{{ snapshot.model }}</strong>
+      <span data-role="agent-model-source">
+        {{ "Default model" if snapshot.model_source == "default" else "Custom override" }}
+      </span>
     </div>
   </section>
 
@@ -32,7 +37,7 @@
     </section>
 
     <aside class="panel side-panel">
-      <details class="collapsible-section settings-panel">
+      <details class="collapsible-section settings-panel" open>
         <summary class="collapsible-toggle">Schedule settings</summary>
         <div class="collapsible-body">
           <div id="daily-schedule-controls">

@@ -23,7 +23,7 @@ from backend.agents.daily_scheduler.skills import (
 )
 from backend.exceptions import ConfigError
 from backend.shared.events import EventBroker
-from backend.shared.settings import AgentSettings
+from backend.shared.settings import AgentSettings, OpenAISettings
 
 
 PENDING_OVERDUE_TASK_ID = "pending_overdue_task_id"
@@ -32,7 +32,12 @@ PENDING_OVERDUE_TASK_ID = "pending_overdue_task_id"
 class DailySchedulerAgent(BaseAgent):
     """Registry-backed daily planning workflow with deterministic scheduling."""
 
-    def __init__(self, settings: AgentSettings, broker: EventBroker) -> None:
+    def __init__(
+        self,
+        settings: AgentSettings,
+        openai_settings: OpenAISettings,
+        broker: EventBroker,
+    ) -> None:
         super().__init__(
             slug="daily_scheduler",
             title="Daily Schedule",
@@ -41,6 +46,7 @@ class DailySchedulerAgent(BaseAgent):
             accent="teal",
             storage_path=Path(__file__).resolve().parent / "memory.db",
             settings=settings,
+            openai_settings=openai_settings,
             broker=broker,
         )
         self.repository = DailyScheduleRepository(self.storage_path)

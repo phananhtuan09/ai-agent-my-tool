@@ -4,43 +4,24 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from fastapi.testclient import TestClient
+import pytest
 
+from backend.exceptions import ConfigError
 from backend.main import create_app
+from backend.shared.settings import load_settings
 
 
 TEST_SETTINGS = """\
+openai:
+  base_url: https://api.openai.com/v1
+  default_model: gpt-5
+  available_models:
+    - gpt-5
+    - gpt-5-mini
+    - gpt-4.1-mini
 agents:
-  job_finder:
-    provider: anthropic
-    model: claude-3-7-sonnet-latest
-    api_key_env_var: ANTHROPIC_API_KEY
-    job_finder:
-      cron: "0 8 * * *"
-      sources:
-        topcv:
-          enabled: true
-          label: TopCV
-        itviec:
-          enabled: true
-          label: ITviec
-        vietnamworks:
-          enabled: true
-          label: VietnamWorks
-      filters:
-        salary_min: 1500
-        salary_max: 3000
-        locations:
-          - Ho Chi Minh City
-        must_have_frameworks:
-          - React
-        nice_to_have_frameworks:
-          - Next.js
-        exclude_keywords:
-          - intern
   daily_scheduler:
-    provider: openai
     model: gpt-5-mini
-    api_key_env_var: OPENAI_API_KEY
     daily_scheduler:
       reminder_cron: "0 * * * *"
       reset_cron: "0 0 * * *"
@@ -48,9 +29,7 @@ agents:
       focus_break_minutes: 10
       default_task_minutes: 45
   crypto_airdrop:
-    provider: openai
-    model: gpt-5
-    api_key_env_var: OPENAI_API_KEY
+    model: gpt-4.1-mini
     crypto_airdrop:
       cron: "0 */6 * * *"
       sources:
@@ -69,223 +48,218 @@ agents:
 """
 
 
-def _build_client(tmp_path: Path, monkeypatch) -> tuple[TestClient, Path]:
+def _build_client(tmp_path: Path, monkeypatch) -> tuple[TestClient, Path, Path]:
     settings_path = tmp_path / "settings.yaml"
+    env_path = tmp_path / ".env"
     settings_path.write_text(TEST_SETTINGS, encoding="utf-8")
     monkeypatch.setenv("AI_AGENT_TOOL_SETTINGS_PATH", str(settings_path))
-    return TestClient(create_app()), settings_path
+    monkeypatch.setenv("AI_AGENT_TOOL_ENV_PATH", str(env_path))
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    return TestClient(create_app()), settings_path, env_path
 
 
-def test_dashboard_lists_registered_agents(tmp_path: Path, monkeypatch) -> None:
-    client, _ = _build_client(tmp_path, monkeypatch)
+def test_dashboard_lists_active_agents_without_job_finder(tmp_path: Path, monkeypatch) -> None:
+    client, _, _ = _build_client(tmp_path, monkeypatch)
 
     with client:
         response = client.get("/")
 
     assert response.status_code == 200
-    assert "Job Finder" in response.text
     assert "Daily Schedule" in response.text
     assert "Crypto Airdrop" in response.text
+    assert "Job Finder" not in response.text
+    assert 'href="/config"' in response.text
 
 
-def test_config_update_persists_and_hot_swaps(tmp_path: Path, monkeypatch) -> None:
-    client, settings_path = _build_client(tmp_path, monkeypatch)
+def test_config_page_renders_openai_form(tmp_path: Path, monkeypatch) -> None:
+    client, _, _ = _build_client(tmp_path, monkeypatch)
+
+    with client:
+        response = client.get("/config")
+
+    assert response.status_code == 200
+    assert "OpenAI config" in response.text
+    assert 'name="base_url"' in response.text
+    assert "Test API" in response.text
+
+
+def test_openai_test_fetches_models(tmp_path: Path, monkeypatch) -> None:
+    client, _, env_path = _build_client(tmp_path, monkeypatch)
+    env_path.write_text("OPENAI_API_KEY=sk-existing\n", encoding="utf-8")
+    async def _fake_fetch_openai_models(base_url: str, api_key: str) -> list[str]:
+        return ["gpt-5", "gpt-5-mini"]
+
+    monkeypatch.setattr("backend.api.config.fetch_openai_models", _fake_fetch_openai_models)
 
     with client:
         response = client.post(
-            "/agents/job_finder/config",
+            "/config/openai/test",
             data={
-                "provider": "openai",
-                "model": "gpt-5-mini",
-                "api_key_env_var": "OPENAI_API_KEY",
+                "base_url": "https://api.openai.com/v1",
+                "api_key": "",
             },
         )
-        snapshot = client.app.state.registry.get("job_finder").build_snapshot()
+
+    assert response.status_code == 200
+    assert "API connection OK. Found 2 model(s)." in response.text
+    assert "gpt-5-mini" in response.text
+
+
+def test_openai_config_update_persists_and_hot_swaps(tmp_path: Path, monkeypatch) -> None:
+    client, settings_path, env_path = _build_client(tmp_path, monkeypatch)
+
+    with client:
+        response = client.post(
+            "/config/openai",
+            data={
+                "base_url": "https://proxy.openai.local/v1",
+                "default_model": "gpt-5-mini",
+                "api_key": "sk-test-123",
+            },
+        )
+        snapshot = client.app.state.registry.get("daily_scheduler").build_snapshot()
+
+    saved_text = settings_path.read_text(encoding="utf-8")
+    saved_env = env_path.read_text(encoding="utf-8")
+
+    assert response.status_code == 200
+    assert "OpenAI settings saved" in response.text
+    assert "base_url: https://proxy.openai.local/v1" in saved_text
+    assert "default_model: gpt-5-mini" in saved_text
+    assert "OPENAI_API_KEY=sk-test-123" in saved_env
+    assert snapshot["provider"] == "openai"
+    assert snapshot["model"] == "gpt-5-mini"
+    assert snapshot["base_url"] == "https://proxy.openai.local/v1"
+    assert snapshot["is_configured"] is True
+
+
+def test_fetch_models_persists_catalog_for_agent_modal(tmp_path: Path, monkeypatch) -> None:
+    client, settings_path, _ = _build_client(tmp_path, monkeypatch)
+
+    async def _fake_fetch_openai_models(base_url: str, api_key: str) -> list[str]:
+        return ["gpt-5", "gpt-5-mini", "gpt-4.1-mini", "gpt-4.1"]
+
+    monkeypatch.setattr("backend.api.config.fetch_openai_models", _fake_fetch_openai_models)
+
+    with client:
+        fetch_response = client.post(
+            "/config/openai/fetch-models",
+            data={
+                "base_url": "https://api.openai.com/v1",
+                "api_key": "sk-test-123",
+                "default_model": "gpt-5-mini",
+            },
+        )
+        response = client.get("/agents/daily_scheduler/config")
+
+    saved_text = settings_path.read_text(encoding="utf-8")
+
+    assert fetch_response.status_code == 200
+    assert "Fetched 4 model(s)" in fetch_response.text
+    assert response.status_code == 200
+    assert "gpt-4.1" in response.text
+    assert "gpt-5-mini" in response.text
+    assert "available_models:" in saved_text
+    assert "OPENAI_API_KEY=sk-test-123" not in saved_text
+
+
+def test_agent_model_override_persists_and_hot_swaps(tmp_path: Path, monkeypatch) -> None:
+    client, settings_path, _ = _build_client(tmp_path, monkeypatch)
+
+    with client:
+        response = client.post(
+            "/agents/daily_scheduler/config",
+            data={"model": "gpt-4.1-mini"},
+        )
+        snapshot = client.app.state.registry.get("daily_scheduler").build_snapshot()
 
     saved_text = settings_path.read_text(encoding="utf-8")
 
     assert response.status_code == 200
-    assert "Configuration saved" in response.text
-    assert "provider: openai" in saved_text
-    assert snapshot["provider"] == "openai"
-    assert snapshot["model"] == "gpt-5-mini"
+    assert "Model selection saved" in response.text
+    assert "model: gpt-4.1-mini" in saved_text
+    assert snapshot["model"] == "gpt-4.1-mini"
+    assert snapshot["model_source"] == "override"
+
+
+def test_agent_model_can_fall_back_to_global_default(tmp_path: Path, monkeypatch) -> None:
+    client, settings_path, _ = _build_client(tmp_path, monkeypatch)
+
+    with client:
+        client.post(
+            "/agents/daily_scheduler/config",
+            data={"model": "gpt-4.1-mini"},
+        )
+        response = client.post(
+            "/agents/daily_scheduler/config",
+            data={"model": ""},
+        )
+        snapshot = client.app.state.registry.get("daily_scheduler").build_snapshot()
+
+    saved_text = settings_path.read_text(encoding="utf-8")
+
+    assert response.status_code == 200
+    assert "model: null" in saved_text
+    assert snapshot["model"] == "gpt-5"
+    assert snapshot["model_source"] == "default"
+
+
+def test_job_finder_page_is_removed(tmp_path: Path, monkeypatch) -> None:
+    client, _, _ = _build_client(tmp_path, monkeypatch)
+
+    with client:
+        response = client.get("/agents/job_finder")
+
+    assert response.status_code == 404
+
+
+def test_legacy_provider_fields_fail_validation(tmp_path: Path, monkeypatch) -> None:
+    settings_path = tmp_path / "settings.yaml"
+    settings_path.write_text(
+        """\
+openai:
+  base_url: https://api.openai.com/v1
+  default_model: gpt-5
+agents:
+  daily_scheduler:
+    provider: openai
+    model: gpt-5
+    api_key_env_var: OPENAI_API_KEY
+    daily_scheduler:
+      reminder_cron: "0 * * * *"
+      reset_cron: "0 0 * * *"
+      workday_start: "09:00"
+      focus_break_minutes: 10
+      default_task_minutes: 45
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("AI_AGENT_TOOL_SETTINGS_PATH", str(settings_path))
+    with pytest.raises(ConfigError) as exc_info:
+        load_settings()
+
+    message = str(exc_info.value)
+    assert "Settings validation failed" in message
+    assert "provider" in message
 
 
 def test_stream_starts_with_status_event(tmp_path: Path, monkeypatch) -> None:
-    client, _ = _build_client(tmp_path, monkeypatch)
+    client, _, _ = _build_client(tmp_path, monkeypatch)
 
     with client:
-        with client.stream("GET", "/stream/job_finder") as response:
+        with client.stream("GET", "/stream/daily_scheduler") as response:
             first_chunk = next(response.iter_text())
 
     assert response.status_code == 200
     assert "event: status" in first_chunk
-    assert '"agent_name": "job_finder"' in first_chunk
-
-
-def test_job_filter_update_persists_nested_settings(tmp_path: Path, monkeypatch) -> None:
-    client, settings_path = _build_client(tmp_path, monkeypatch)
-
-    with client:
-        response = client.post(
-            "/agents/job_finder/filters",
-            data={
-                "salary_min": "1800",
-                "salary_max": "2800",
-                "locations": "Ho Chi Minh City, Hanoi",
-                "must_have_frameworks": "React, TypeScript",
-                "nice_to_have_frameworks": "Next.js",
-                "exclude_keywords": "intern",
-                "cron": "15 8 * * *",
-                "topcv_enabled": "on",
-                "itviec_enabled": "on",
-                "vietnamworks_enabled": "on",
-            },
-        )
-
-    saved_text = settings_path.read_text(encoding="utf-8")
-
-    assert response.status_code == 200
-    assert "Job filter settings saved" in response.text
-    assert 'cron: 15 8 * * *' in saved_text
-    assert "- TypeScript" in saved_text
-
-
-def test_job_run_renders_ranked_cards(tmp_path: Path, monkeypatch) -> None:
-    client, _ = _build_client(tmp_path, monkeypatch)
-
-    with client:
-        response = client.post("/agents/job_finder/run")
-
-    assert response.status_code == 200
-    assert "Senior React Engineer" in response.text
-    assert "Open source listing" in response.text
-    assert "Crawl finished" in response.text
-    assert "Deterministic fallback used" in response.text
-
-
-def test_job_run_shows_empty_state_when_filters_exclude_everything(
-    tmp_path: Path,
-    monkeypatch,
-) -> None:
-    client, _ = _build_client(tmp_path, monkeypatch)
-
-    with client:
-        client.post(
-            "/agents/job_finder/filters",
-            data={
-                "salary_min": "9000",
-                "salary_max": "12000",
-                "locations": "Tokyo",
-                "must_have_frameworks": "Elixir",
-                "nice_to_have_frameworks": "",
-                "exclude_keywords": "",
-                "cron": "0 8 * * *",
-                "topcv_enabled": "on",
-                "itviec_enabled": "on",
-                "vietnamworks_enabled": "on",
-            },
-        )
-        response = client.post("/agents/job_finder/run")
-
-    assert response.status_code == 200
-    assert "No jobs passed the hard filters yet" in response.text
-
-
-def test_job_run_rejects_when_all_sources_disabled(tmp_path: Path, monkeypatch) -> None:
-    client, _ = _build_client(tmp_path, monkeypatch)
-
-    with client:
-        client.post(
-            "/agents/job_finder/filters",
-            data={
-                "salary_min": "1500",
-                "salary_max": "3000",
-                "locations": "Ho Chi Minh City",
-                "must_have_frameworks": "React",
-                "nice_to_have_frameworks": "Next.js",
-                "exclude_keywords": "intern",
-                "cron": "0 8 * * *",
-            },
-        )
-        response = client.post("/agents/job_finder/run")
-
-    assert response.status_code == 422
-    assert "Enable at least one job source" in response.text
-
-
-def test_job_run_shows_partial_failure_warning(tmp_path: Path, monkeypatch) -> None:
-    client, settings_path = _build_client(tmp_path, monkeypatch)
-    settings_path.write_text(
-        TEST_SETTINGS.replace("label: ITviec", "label: ITviec\n          simulate_failure: true"),
-        encoding="utf-8",
-    )
-
-    with client:
-        response = client.post("/agents/job_finder/run")
-
-    assert response.status_code == 200
-    assert "itviec crawl failed; other sources continued" in response.text
-    assert "Senior React Engineer" in response.text
-
-
-def test_job_filter_rejects_invalid_cron(tmp_path: Path, monkeypatch) -> None:
-    client, settings_path = _build_client(tmp_path, monkeypatch)
-
-    with client:
-        response = client.post(
-            "/agents/job_finder/filters",
-            data={
-                "salary_min": "1500",
-                "salary_max": "3000",
-                "locations": "Ho Chi Minh City",
-                "must_have_frameworks": "React",
-                "nice_to_have_frameworks": "Next.js",
-                "exclude_keywords": "intern",
-                "cron": "0 8 * *",
-                "topcv_enabled": "on",
-                "itviec_enabled": "on",
-                "vietnamworks_enabled": "on",
-            },
-        )
-
-    saved_text = settings_path.read_text(encoding="utf-8")
-
-    assert response.status_code == 422
-    assert "5-field crontab" in response.text
-    assert 'cron: "0 8 * * *"' in saved_text
-
-
-def test_job_filter_returns_400_for_malformed_yaml(tmp_path: Path, monkeypatch) -> None:
-    client, settings_path = _build_client(tmp_path, monkeypatch)
-
-    with client:
-        settings_path.write_text("agents: [broken", encoding="utf-8")
-        response = client.post(
-            "/agents/job_finder/filters",
-            data={
-                "salary_min": "1500",
-                "salary_max": "3000",
-                "locations": "Ho Chi Minh City",
-                "must_have_frameworks": "React",
-                "nice_to_have_frameworks": "Next.js",
-                "exclude_keywords": "intern",
-                "cron": "0 8 * * *",
-                "topcv_enabled": "on",
-                "itviec_enabled": "on",
-                "vietnamworks_enabled": "on",
-            },
-        )
-
-    assert response.status_code == 400
-    assert "Settings YAML is malformed" in response.text
+    assert '"agent_name": "daily_scheduler"' in first_chunk
 
 
 def test_daily_schedule_page_renders_controls_and_empty_state(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    client, _ = _build_client(tmp_path, monkeypatch)
+    client, _, _ = _build_client(tmp_path, monkeypatch)
 
     with client:
         response = client.get("/agents/daily_scheduler")
@@ -296,7 +270,7 @@ def test_daily_schedule_page_renders_controls_and_empty_state(
 
 
 def test_daily_schedule_chat_creates_timeline(tmp_path: Path, monkeypatch) -> None:
-    client, _ = _build_client(tmp_path, monkeypatch)
+    client, _, _ = _build_client(tmp_path, monkeypatch)
 
     with client:
         response = client.post(
@@ -314,7 +288,7 @@ def test_daily_schedule_progress_update_reschedules_remaining_tasks(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    client, _ = _build_client(tmp_path, monkeypatch)
+    client, _, _ = _build_client(tmp_path, monkeypatch)
 
     with client:
         client.post(
@@ -339,7 +313,7 @@ def test_daily_schedule_overdue_branch_requires_decision(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    client, _ = _build_client(tmp_path, monkeypatch)
+    client, _, _ = _build_client(tmp_path, monkeypatch)
 
     with client:
         client.post(
@@ -372,7 +346,7 @@ def test_daily_schedule_settings_reject_invalid_cron(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    client, settings_path = _build_client(tmp_path, monkeypatch)
+    client, settings_path, _ = _build_client(tmp_path, monkeypatch)
 
     with client:
         response = client.post(
@@ -395,7 +369,7 @@ def test_crypto_airdrop_page_renders_controls_and_empty_state(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    client, _ = _build_client(tmp_path, monkeypatch)
+    client, _, _ = _build_client(tmp_path, monkeypatch)
 
     with client:
         response = client.get("/agents/crypto_airdrop")
@@ -406,19 +380,19 @@ def test_crypto_airdrop_page_renders_controls_and_empty_state(
 
 
 def test_crypto_airdrop_run_renders_ranked_cards(tmp_path: Path, monkeypatch) -> None:
-    client, _ = _build_client(tmp_path, monkeypatch)
+    client, _, _ = _build_client(tmp_path, monkeypatch)
 
     with client:
         response = client.post("/agents/crypto_airdrop/run")
 
     assert response.status_code == 200
     assert "LayerSpring Campaign" in response.text
-    assert "Open source page" in response.text
+    assert "Airdrops Io" in response.text
     assert "Crawl finished" in response.text
 
 
 def test_crypto_airdrop_chat_filters_latest_cycle(tmp_path: Path, monkeypatch) -> None:
-    client, _ = _build_client(tmp_path, monkeypatch)
+    client, _, _ = _build_client(tmp_path, monkeypatch)
 
     with client:
         client.post("/agents/crypto_airdrop/run")
@@ -435,7 +409,7 @@ def test_crypto_airdrop_settings_reject_invalid_cron(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    client, settings_path = _build_client(tmp_path, monkeypatch)
+    client, settings_path, _ = _build_client(tmp_path, monkeypatch)
 
     with client:
         response = client.post(

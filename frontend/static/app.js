@@ -48,6 +48,7 @@ const AppShell = (() => {
     document.addEventListener("change", handleDocumentChange);
     document.addEventListener("submit", handleFormSubmit, true);
     document.addEventListener("htmx:beforeRequest", handleBeforeRequest);
+    document.addEventListener("htmx:beforeSwap", handleBeforeSwap);
     document.addEventListener("htmx:afterRequest", handleAfterRequest);
     document.addEventListener("htmx:responseError", handleAfterRequest);
     window.addEventListener("resize", syncResponsivePanels);
@@ -176,15 +177,16 @@ const AppShell = (() => {
       }
     }
 
-    document.querySelectorAll("[data-role='agent-provider']").forEach((node) => {
-      if (snapshot.provider) {
-        node.textContent = String(snapshot.provider).toUpperCase();
-      }
-    });
-
     document.querySelectorAll("[data-role='agent-model']").forEach((node) => {
       if (snapshot.model) {
         node.textContent = snapshot.model;
+      }
+    });
+
+    document.querySelectorAll("[data-role='agent-model-source']").forEach((node) => {
+      if (snapshot.model_source) {
+        node.textContent =
+          snapshot.model_source === "default" ? "Default model" : "Custom override";
       }
     });
   }
@@ -200,6 +202,7 @@ const AppShell = (() => {
     }
 
     const entry = document.createElement("li");
+    entry.className = getFeedItemClass(tag);
     const label = document.createElement("span");
     const body = document.createElement("p");
 
@@ -384,14 +387,7 @@ const AppShell = (() => {
       : [{ role: "assistant", content: "Send a morning task list to create today's timeline." }];
 
     feed.innerHTML = items
-      .map(
-        (item) => `
-          <li>
-            <span class="feed-tag">${escapeHtml(item.role)}</span>
-            <p>${escapeHtml(item.content)}</p>
-          </li>
-        `
-      )
+      .map((item) => buildFeedItemHtml(item.role, item.content))
       .join("");
 
     const badge = document.querySelector("#daily-schedule-chat-panel .warning-pill");
@@ -484,22 +480,32 @@ const AppShell = (() => {
         ];
 
     feed.innerHTML = items
-      .map(
-        (item) => `
-          <li>
-            <span class="feed-tag">${escapeHtml(item.role)}</span>
-            <p>${escapeHtml(item.content)}</p>
-          </li>
-        `
-      )
+      .map((item) => buildFeedItemHtml(item.role, item.content))
       .join("");
   }
 
   function handleDocumentClick(event) {
+    const sidebarOpen = event.target.closest("[data-sidebar-open]");
+    if (sidebarOpen) {
+      setSidebarOpen(true);
+      return;
+    }
+
+    const sidebarClose = event.target.closest("[data-sidebar-close]");
+    if (sidebarClose) {
+      setSidebarOpen(false);
+      return;
+    }
+
     const sortHeader = event.target.closest("th[data-sort]");
     if (sortHeader) {
       sortTable(sortHeader);
       return;
+    }
+
+    const navLink = event.target.closest(".sidebar .nav-link");
+    if (navLink && window.innerWidth <= 767) {
+      setSidebarOpen(false);
     }
 
     const triggerButton = event.target.closest("[data-trigger-click]");
@@ -557,6 +563,25 @@ const AppShell = (() => {
     if (event.detail.elt instanceof HTMLFormElement) {
       submitters.delete(event.detail.elt);
     }
+  }
+
+  function handleBeforeSwap(event) {
+    const xhr = event.detail.xhr;
+    const target = event.detail.target;
+
+    if (!xhr || !target) {
+      return;
+    }
+
+    const isClientError = xhr.status >= 400 && xhr.status < 500;
+    const isHtmlResponse = xhr.getResponseHeader("Content-Type")?.includes("text/html");
+
+    if (!isClientError || !isHtmlResponse) {
+      return;
+    }
+
+    event.detail.shouldSwap = true;
+    event.detail.isError = false;
   }
 
   function handleFormSubmit(event) {
@@ -634,19 +659,23 @@ const AppShell = (() => {
   }
 
   function syncResponsivePanels() {
-    const desktop = window.innerWidth > 900;
+    const desktopFilterLayout = window.innerWidth > 1024;
     document.querySelectorAll("[data-filter-toggle]").forEach((button) => {
       const target = document.querySelector(button.dataset.filterToggle);
       if (!target) {
         return;
       }
-      if (desktop) {
+      if (desktopFilterLayout) {
         target.classList.remove("is-open");
         button.setAttribute("aria-expanded", "false");
       } else if (target.classList.contains("is-open")) {
         button.setAttribute("aria-expanded", "true");
       }
     });
+
+    if (window.innerWidth > 767) {
+      setSidebarOpen(false);
+    }
   }
 
   function sortTable(header) {
@@ -749,7 +778,7 @@ const AppShell = (() => {
       : `data-focus-target="${escapeHtml(focusTarget || "")}"`;
 
     return `
-      <article class="empty-state">
+      <article class="empty-state compact-empty-state">
         <div class="empty-icon">${icon}</div>
         <p class="eyebrow">${escapeHtml(eyebrow)}</p>
         <h3>${escapeHtml(title)}</h3>
@@ -792,6 +821,47 @@ const AppShell = (() => {
 
   function formatLabel(value) {
     return String(value).replaceAll("_", " ");
+  }
+
+  function buildFeedItemHtml(role, content) {
+    return `
+      <li class="${getFeedItemClass(role)}">
+        <span class="feed-tag">${escapeHtml(role)}</span>
+        <p>${escapeHtml(content)}</p>
+      </li>
+    `;
+  }
+
+  function getFeedItemClass(tag) {
+    const normalized = String(tag || "assistant").toLowerCase().replaceAll("_", "-");
+
+    if (normalized === "user") {
+      return "is-user";
+    }
+    if (normalized === "assistant" || normalized === "chat") {
+      return "is-assistant";
+    }
+    if (normalized === "notify") {
+      return "is-notify";
+    }
+    if (normalized === "status") {
+      return "is-status";
+    }
+    if (normalized === "ui") {
+      return "is-ui";
+    }
+    if (normalized === "warn" || normalized === "warning" || normalized === "error") {
+      return "is-warn";
+    }
+
+    return `is-${normalized}`;
+  }
+
+  function setSidebarOpen(isOpen) {
+    document.body.classList.toggle("sidebar-open", isOpen);
+    document.querySelectorAll("[data-sidebar-open]").forEach((button) => {
+      button.setAttribute("aria-expanded", String(isOpen));
+    });
   }
 
   function formatSource(value) {

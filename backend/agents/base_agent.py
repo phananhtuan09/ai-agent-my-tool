@@ -10,7 +10,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from backend.shared.events import EventBroker
 from backend.shared.llm_client import LLMClient
-from backend.shared.settings import AgentSettings, resolve_agent_storage_path
+from backend.shared.settings import AgentSettings, OpenAISettings, resolve_agent_storage_path
 
 
 class BaseAgent:
@@ -26,6 +26,7 @@ class BaseAgent:
         accent: str,
         storage_path: Path,
         settings: AgentSettings,
+        openai_settings: OpenAISettings,
         broker: EventBroker,
     ) -> None:
         self.slug = slug
@@ -35,8 +36,9 @@ class BaseAgent:
         self.accent = accent
         self.storage_path = resolve_agent_storage_path(storage_path, slug)
         self.settings = settings
+        self.openai_settings = openai_settings
         self.broker = broker
-        self.llm_client = LLMClient.from_settings(settings)
+        self.llm_client = LLMClient.from_settings(settings, openai_settings)
 
     def initialize(self) -> None:
         """Prepare per-agent storage and broker registration."""
@@ -57,22 +59,31 @@ class BaseAgent:
                 INSERT OR REPLACE INTO agent_meta(key, value)
                 VALUES ('title', ?), ('provider', ?), ('model', ?)
                 """,
-                (self.title, self.settings.provider, self.settings.model),
+                (self.title, "openai", self.llm_client.model),
             )
             connection.commit()
 
         self.broker.register_agent(self.slug)
 
-    def reload_settings(self, settings: AgentSettings) -> None:
+    def reload_settings(
+        self,
+        settings: AgentSettings,
+        openai_settings: OpenAISettings,
+    ) -> None:
         """Hot-swap the agent settings after settings.yaml changes."""
 
         self.settings = settings
-        self.llm_client = LLMClient.from_settings(settings)
+        self.openai_settings = openai_settings
+        self.llm_client = LLMClient.from_settings(settings, openai_settings)
 
-    def reload_llm_client(self, settings: AgentSettings) -> None:
+    def reload_llm_client(
+        self,
+        settings: AgentSettings,
+        openai_settings: OpenAISettings,
+    ) -> None:
         """Backward-compatible wrapper around the generic settings reload."""
 
-        self.reload_settings(settings)
+        self.reload_settings(settings, openai_settings)
 
     def build_snapshot(self) -> dict[str, Any]:
         """Return the current status snapshot used by dashboard and SSE."""
@@ -84,11 +95,16 @@ class BaseAgent:
             "summary": self.summary,
             "accent": self.accent,
             "provider": summary["provider"],
+            "base_url": summary["base_url"],
             "model": summary["model"],
-            "api_key_env_var": summary["api_key_env_var"],
+            "model_source": summary["model_source"],
             "is_configured": summary["is_configured"],
             "storage_path": str(self.storage_path),
-            "status": "Configured" if summary["is_configured"] else "Needs API key",
+            "status": (
+                "Configured"
+                if summary["is_configured"]
+                else "Needs OpenAI API key"
+            ),
         }
 
     def publish(self, event_type: str, **payload: Any) -> None:

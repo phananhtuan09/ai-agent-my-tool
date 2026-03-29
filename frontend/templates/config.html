@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <section class="page-hero accent-blue">
+    <div>
+      <p class="eyebrow">Shared runtime</p>
+      <h2>OpenAI config</h2>
+      <p class="hero-copy">
+        Set the default endpoint, API key, and model catalog that power every agent page in the app shell.
+      </p>
+    </div>
+    <div class="hero-badge">
+      <strong>{{ openai_config.default_model }}</strong>
+      <span>{{ "API key configured" if api_key_configured else "API key missing" }}</span>
+    </div>
+  </section>
+
+  <section class="page-layout is-main-right">
+    <section class="panel page-main">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Connection settings</p>
+          <h3>Endpoint and model catalog</h3>
+        </div>
+        <span class="status-pill {% if api_key_configured %}is-ready{% else %}is-warn{% endif %}">
+          {{ "Configured" if api_key_configured else "Needs API key" }}
+        </span>
+      </div>
+
+      <form
+        id="openai-config-form"
+        class="config-form"
+        hx-post="/config/openai"
+        hx-target="#config-feedback"
+        hx-swap="innerHTML"
+      >
+        <label>
+          <span>Base URL</span>
+          <input type="url" name="base_url" value="{{ openai_config.base_url }}" required />
+        </label>
+
+        <label>
+          <span>API key</span>
+          <input
+            type="password"
+            name="api_key"
+            value=""
+            placeholder="{% if api_key_configured %}Configured. Leave blank to keep current key.{% else %}Paste a new OpenAI API key{% endif %}"
+          />
+        </label>
+
+        <div id="openai-model-field">
+          {% include "partials/openai_model_field.html" %}
+        </div>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            hx-post="/config/openai/test"
+            hx-include="#openai-config-form"
+            hx-target="#openai-model-field"
+            hx-swap="innerHTML"
+          >
+            Test API
+          </button>
+          <button
+            type="button"
+            class="btn btn-ghost"
+            hx-post="/config/openai/fetch-models"
+            hx-include="#openai-config-form"
+            hx-target="#openai-model-field"
+            hx-swap="innerHTML"
+          >
+            Fetch models
+          </button>
+          <button type="submit" class="btn btn-primary" data-loading-text="Saving...">
+            Save settings
+          </button>
+        </div>
+      </form>
+
+      <div id="config-feedback"></div>
+    </section>
+
+    <aside class="panel side-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Model catalog</p>
+          <h3>Shared options</h3>
+        </div>
+      </div>
+      {% if available_models %}
+        <div class="tag-list">
+          {% for model in available_models %}
+            <span>{{ model }}</span>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state compact-empty-state">
+          <p class="eyebrow">No fetched models yet</p>
+          <h3>Fetch the catalog first</h3>
+          <p>Use the config form to test the API and persist the model list for agent pages.</p>
+        </div>
+      {% endif %}
+      <div class="sidebar-divider"></div>
+      <ul class="stack-list">
+        <li>The config page owns base URL, API key, API test, and model discovery.</li>
+        <li>Agent pages only keep the `Change model` action.</li>
+        <li>Use `Fetch models` to persist the shared model catalog for all agent pages.</li>
+      </ul>
+    </aside>
+  </section>
+{% endblock %}

@@ -4,9 +4,9 @@
 
 AI Agent Tool is a FastAPI application with an HTMX and Jinja2 frontend for running a small set of personal automation agents from one web interface.
 
-The project currently ships with three agent consoles:
+The project currently ships with two agent consoles and one shared config page:
 
-- `Job Finder` for crawling and ranking job listings
+- `Config` for managing the shared OpenAI base URL, API key, connectivity test, and model catalog
 - `Daily Scheduler` for turning a task list into a working-day schedule
 - `Crypto Airdrop` for tracking and filtering ranked airdrop opportunities
 
@@ -17,19 +17,18 @@ The UI is served as server-rendered pages, while live updates are pushed through
 - Unified dashboard for all registered agents
 - Per-agent pages with dedicated controls, results, and live activity
 - Hot-swappable model configuration from the UI
-- YAML-based runtime settings for schedules, filters, and enabled sources
+- YAML-based runtime settings for schedules, enabled sources, and shared OpenAI config
 - SSE-powered status, chat, notification, and UI update streams
 - Local per-agent persistence with SQLite
 - Dark professional UI with responsive layouts and table-based result views
 
-### Included agents
+### Included pages
 
-#### Job Finder
+#### Config
 
-- Runs manual or scheduled crawls
-- Applies hard filters such as salary, location, and framework requirements
-- Ranks matched jobs and keeps the latest results in local storage
-- Supports source-level enable/disable controls
+- Manages the shared OpenAI-compatible base URL and API key
+- Tests connectivity against the configured endpoint
+- Fetches and persists the shared model catalog for agent model pickers
 
 #### Daily Scheduler
 
@@ -65,16 +64,14 @@ pip install -e ".[dev]"
 Use `config/.env.example` as a reference:
 
 ```env
-ANTHROPIC_API_KEY=replace-me
 OPENAI_API_KEY=replace-me
 ```
 
-This project reads API keys from process environment variables. It does not auto-load `.env`, so export them in your shell before starting the app.
+This project reads the OpenAI API key from process environment variables or the persisted `config/.env` file written by the config page.
 
 Example:
 
 ```bash
-export ANTHROPIC_API_KEY="your-key"
 export OPENAI_API_KEY="your-key"
 ```
 
@@ -84,10 +81,10 @@ Main runtime configuration lives in `config/settings.yaml`.
 
 This file controls:
 
-- model/provider per agent
+- shared OpenAI base URL and model catalog
+- per-agent model overrides
 - cron schedules
 - enabled sources
-- filter settings
 - daily scheduler runtime options
 
 You can also override the settings file path with:
@@ -119,7 +116,7 @@ export AI_AGENT_TOOL_ENABLE_LIVE_AIRDROP_FETCH=1
 ## Useful Routes
 
 - `/` dashboard
-- `/agents/job_finder`
+- `/config`
 - `/agents/daily_scheduler`
 - `/agents/crypto_airdrop`
 - `/stream/{agent_name}` SSE stream endpoint

@@ -1,50 +1,23 @@
+openai:
+  base_url: https://api.openai.com/v1
+  default_model: gpt-5
+  available_models:
+  - gpt-5
+  - gpt-5-mini
+  - gpt-4.1-mini
 agents:
-  job_finder:
-    provider: openai
-    model: gpt-5
-    api_key_env_var: OPENAI_API_KEY
-    job_finder:
-      cron: 0 8 * * *
-      sources:
-        topcv:
-          enabled: true
-          label: TopCV
-          simulate_failure: false
-        itviec:
-          enabled: true
-          label: ITviec
-          simulate_failure: false
-        vietnamworks:
-          enabled: true
-          label: VietnamWorks
-          simulate_failure: false
-      filters:
-        salary_min: 700
-        salary_max: 1200
-        locations:
-        - Ho Chi Minh City
-        must_have_frameworks:
-        - React
-        - TypeScript
-        nice_to_have_frameworks:
-        - Next.js
-        exclude_keywords: []
-    daily_scheduler: null
-    crypto_airdrop: null
   daily_scheduler:
-    provider: openai
     model: gpt-5-mini
-    api_key_env_var: OPENAI_API_KEY
     daily_scheduler:
       reminder_cron: 0 * * * *
       reset_cron: 0 0 * * *
       workday_start: 09:00
       focus_break_minutes: 10
       default_task_minutes: 45
+    crypto_airdrop: null
   crypto_airdrop:
-    provider: openai
-    model: gpt-5
-    api_key_env_var: OPENAI_API_KEY
+    model: gpt-4.1-mini
+    daily_scheduler: null
     crypto_airdrop:
       cron: 0 */6 * * *
       sources:
@@ -52,11 +25,14 @@ agents:
           enabled: true
           label: airdrops.io
           url: https://airdrops.io
+          simulate_failure: false
         cryptorank:
           enabled: true
           label: CryptoRank
           url: https://cryptorank.io
+          simulate_failure: false
         defillama:
           enabled: true
           label: DeFiLlama
           url: https://defillama.com
+          simulate_failure: false

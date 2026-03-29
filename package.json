@@ -1,0 +1,29 @@
+{
+  "name": "ai-agent-tool",
+  "version": "1.0.0",
+  "description": "AI Agent Tool is a FastAPI application with an HTMX and Jinja2 frontend for running a small set of personal automation agents from one web interface.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "playwright test",
+    "test:web:midnight": "playwright test tests/web/midnight-ai-theme-rollout.spec.ts --reporter=line"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/phananhtuan09/ai-agent-my-tool.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/phananhtuan09/ai-agent-my-tool/issues"
+  },
+  "homepage": "https://github.com/phananhtuan09/ai-agent-my-tool#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
+  }
+}

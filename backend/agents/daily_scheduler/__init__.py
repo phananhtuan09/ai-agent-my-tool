@@ -10,6 +10,7 @@ def register(registry: AgentRegistry) -> None:
     registry.register(
         DailySchedulerAgent(
             settings=registry.get_settings("daily_scheduler"),
+            openai_settings=registry.get_openai_settings(),
             broker=registry.broker,
         )
     )

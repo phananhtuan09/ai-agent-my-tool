@@ -21,13 +21,13 @@
 <ul class="activity-feed schedule-chat-feed" id="crypto-airdrop-chat-list">
   {% if airdrop_messages %}
     {% for item in airdrop_messages %}
-      <li>
+      <li class="is-{{ item.role|lower|replace(' ', '-') }}">
         <span class="feed-tag">{{ item.role }}</span>
         <p>{{ item.content }}</p>
       </li>
     {% endfor %}
   {% else %}
-    <li>
+    <li class="is-assistant">
       <span class="feed-tag">assistant</span>
       <p>Run a crawl, then ask for a filter like `show only Ethereum airdrops`.</p>
     </li>
@@ -43,10 +43,13 @@
   <label>
     <span>Chat filter</span>
     <textarea name="message" rows="4" placeholder="Example: show only Ethereum airdrops"></textarea>
+    <small class="field-hint">Ask for chains, deadlines, or quality filters to tighten the ranked feed.</small>
   </label>
   <button type="submit" class="btn btn-primary" data-loading-text="Applying...">Apply filter</button>
 </form>
 
-<div id="airdrop-results-panel" hx-swap-oob="innerHTML">
-  {% include "partials/airdrop_cards.html" %}
-</div>
+{% if include_results_oob %}
+  <div id="airdrop-results-panel" hx-swap-oob="innerHTML">
+    {% include "partials/airdrop_cards.html" %}
+  </div>
+{% endif %}

@@ -20,6 +20,8 @@ This epic breaks the requirement into one foundation slice plus three agent-spec
 | 2 | [feature-job-finder-agent.md](feature-job-finder-agent.md) | P1 | completed | FR-07, FR-08, FR-09, FR-10, FR-11, FR-12, FR-13, FR-14 | feature-ai-agent-foundation | Implement job crawling, hard filtering, AI ranking, retention, and failure reporting on top of the shared shell. |
 | 3 | [feature-daily-schedule-agent.md](feature-daily-schedule-agent.md) | P1 | completed | FR-15, FR-16, FR-17, FR-18, FR-19, FR-20, FR-21 | feature-ai-agent-foundation | Implement task parsing, timeline rendering, reminder cron jobs, and interactive rescheduling for the daily schedule workflow. |
 | 4 | [feature-crypto-airdrop-agent.md](feature-crypto-airdrop-agent.md) | P2 | completed | FR-22, FR-23, FR-24, FR-25, FR-26, FR-27 | feature-ai-agent-foundation | Implement the airdrop crawler, scoring flow, retention rules, and chat filtering with the initial source list of airdrops.io, CryptoRank, and DeFiLlama. |
+| 5 | [feature-openai-global-config.md](feature-openai-global-config.md) | P1 | completed | FR-03, FR-04, FR-05 | feature-ai-agent-foundation | Move configuration to a global OpenAI menu with `.env` API key persistence and per-agent model-only overrides. |
+| 6 | [feature-config-page-and-job-finder-removal.md](feature-config-page-and-job-finder-removal.md) | P1 | completed | FR-01, FR-02, FR-03, FR-04 | feature-openai-global-config | Replace the modal-only OpenAI settings flow with a dedicated config page, fetch dynamic model lists, and remove Job Finder from the active runtime. |
 
 **Status values:** `open` | `in_progress` | `blocked` | `completed`
 
@@ -52,3 +54,7 @@ feature-ai-agent-foundation
 | 2026-03-24 | Daily Schedule plan created and moved to `in_progress` after the first implementation pass with environment-limited verification |
 | 2026-03-24 | Crypto Airdrop plan created and moved to `in_progress` after the first implementation pass with the confirmed initial source list |
 | 2026-03-25 | Full implementation re-verified with dependency-backed local validation, persistence isolation fixes, and feature statuses moved to `completed` |
+| 2026-03-26 | Added `feature-openai-global-config.md` to track the OpenAI-only global config refactor with `.env` secret persistence and per-agent model overrides |
+| 2026-03-26 | Completed the OpenAI-only config refactor with global `.env` API key persistence, per-agent model overrides, and passing focused app tests |
+| 2026-03-28 | Added `feature-config-page-and-job-finder-removal.md` for the dedicated config page, dynamic model discovery, and active Job Finder removal slice |
+| 2026-03-28 | Completed the config page and Job Finder removal slice with passing focused validation |

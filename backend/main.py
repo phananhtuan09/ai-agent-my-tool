@@ -13,7 +13,6 @@ from backend.agents._registry import AgentRegistry
 from backend.api.config import router as config_router
 from backend.api.crypto_airdrop import router as crypto_airdrop_router
 from backend.api.daily_scheduler import router as daily_scheduler_router
-from backend.api.job_finder import router as job_finder_router
 from backend.api.pages import router as pages_router
 from backend.api.stream import router as stream_router
 from backend.shared.events import EventBroker
@@ -58,7 +57,6 @@ def create_app() -> FastAPI:
     app.include_router(config_router)
     app.include_router(crypto_airdrop_router)
     app.include_router(daily_scheduler_router)
-    app.include_router(job_finder_router)
     app.include_router(stream_router)
     return app
 

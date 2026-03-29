@@ -11,18 +11,12 @@ ai-agent-tool/
 ├── backend/                          # Python FastAPI application
 │   ├── main.py                       # FastAPI app entry point, lifespan events
 │   ├── shared/                       # Shared utilities (never import agents here)
-│   │   ├── llm_client.py             # Unified Anthropic + OpenAI wrapper, model switch
+│   │   ├── llm_client.py             # OpenAI runtime descriptor for model + base URL state
 │   │   ├── web_search.py             # duckduckgo-search wrapper
 │   │   └── crawler.py                # Playwright async crawler
 │   ├── agents/                       # One folder per agent (feature-based)
 │   │   ├── _registry.py              # Auto-discover + register all agents
 │   │   ├── base_agent.py             # Abstract BaseAgent: stream(), run(), tools
-│   │   ├── job_finder/
-│   │   │   ├── __init__.py           # register("job_finder", JobFinderAgent)
-│   │   │   ├── agent.py              # Orchestrates crawl → filter → render
-│   │   │   ├── tools.py              # crawl_jobs(), filter_jobs(), render_job_list()
-│   │   │   ├── skills.py             # Job filter + scoring prompt templates
-│   │   │   └── memory.db             # SQLite: jobs seen, user config
 │   │   ├── daily_scheduler/
 │   │   │   ├── __init__.py
 │   │   │   ├── agent.py              # Chat-driven: create/update/reschedule
@@ -38,17 +32,17 @@ ai-agent-tool/
 │   │       ├── cron.py               # APScheduler: every 6h crawl
 │   │       └── memory.db             # SQLite: airdrops tracked
 │   ├── api/                          # FastAPI route handlers
-│   │   ├── job_finder.py             # GET /jobs, POST /run, PUT /config
 │   │   ├── daily_scheduler.py        # POST /chat, GET /schedule
 │   │   ├── crypto_airdrop.py         # POST /chat, GET /airdrops
+│   │   ├── config.py                 # GET/POST OpenAI config actions and model override modal
 │   │   └── stream.py                 # GET /stream/{agent} — SSE endpoint
 │   └── exceptions.py                 # AgentError, ConfigError, CrawlError, LLMError
 │
 ├── frontend/                         # HTMX + Jinja2 templates
 │   ├── templates/
 │   │   ├── base.html                 # Nav + global SSE listener + Notification API
-│   │   ├── dashboard.html            # 3 agent cards with status
-│   │   ├── job_finder.html           # Config form | Job result cards
+│   │   ├── dashboard.html            # Active agent cards with status
+│   │   ├── config.html               # Dedicated OpenAI config page
 │   │   ├── daily_scheduler.html      # Timeline panel | Chat panel
 │   │   └── crypto_airdrop.html       # Airdrop cards | Chat panel
 │   └── static/
@@ -56,8 +50,8 @@ ai-agent-tool/
 │       └── style.css
 │
 ├── config/
-│   ├── .env                          # ANTHROPIC_API_KEY, OPENAI_API_KEY (never commit)
-│   └── settings.yaml                 # Per-agent: model, cron schedule, filter config
+│   ├── .env                          # OPENAI_API_KEY (never commit)
+│   └── settings.yaml                 # Shared OpenAI config plus per-agent runtime settings
 │
 └── docs/
     └── ai/
